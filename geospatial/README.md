@@ -3,6 +3,8 @@
 ## Analyzing this dataset
 [US-Accidents Dataset (2016 to 2023)](https://www.kaggle.com/datasets/sobhanmoosavi/us-accidents)
 
+An web app using the data from this demo is available under https://demo.docs.firebolt.io/geospatial/
+
 ### Steps to follow:
 - Upload the dataset to the S3 bucket
 - Sign up at [Firebolt](https://go.firebolt.io/signup) (comes with free credits)
