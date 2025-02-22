@@ -1,6 +1,11 @@
 # Firebolt Map Analytics Demo
 
 This project is a demonstration of Firebolt’s speed for geospatial analytics on an interactive Mapbox map. The application dynamically queries a Firebolt database to display accident data in real time and showcases various map visualization modes and filtering options.
+| ![Image 1](https://github.com/user-attachments/assets/2901331c-c951-4267-889d-4716ac03ed18) | ![Image 2](https://github.com/user-attachments/assets/1e080758-7f5b-449b-b04a-c527f70e263c) |
+|:--:|:--:|
+
+
+
 
 ## Features
 
