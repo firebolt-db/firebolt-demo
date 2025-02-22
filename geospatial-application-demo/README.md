@@ -40,7 +40,8 @@ firebolt-demo/
 │   └── js/
 │       └── app.js         # Custom JavaScript for map interaction
 └── templates/
-    └── index.html         # Main HTML template
+├── app.py         # Main HTML template
+
 ```
 
 ## How It Works
