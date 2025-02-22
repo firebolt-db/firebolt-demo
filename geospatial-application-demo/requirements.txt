@@ -1,0 +1,4 @@
+Flask
+osmnx
+shapely
+firebolt-client
