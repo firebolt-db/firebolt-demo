@@ -5,7 +5,7 @@ This project is a demonstration of Firebolt’s speed for geospatial analytics o
 |:--:|:--:|
 
 
-
+[Watch the Demo Video here](https://youtu.be/9j_07CidRcs)
 
 ## Features
 
