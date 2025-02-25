@@ -7,6 +7,11 @@ from flask import Flask, jsonify, render_template, request
 from shapely import wkt
 from shapely.geometry import mapping
 import osmnx as ox
+import queue
+
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
 
 # Import Firebolt client modules
 from firebolt.client.auth import ClientCredentials
@@ -29,14 +34,18 @@ ch = logging.StreamHandler(sys.stdout)
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
-# Set your Firebolt credentials from environment variables
+
 client_id = os.getenv("FIREBOLT_CLIENT_ID", "")
 client_secret = os.getenv("FIREBOLT_CLIENT_SECRET", "")
 engine_name = os.getenv("FIREBOLT_ENGINE_NAME", "")
 database_name = os.getenv("FIREBOLT_DATABASE", "")
 account_name = os.getenv("FIREBOLT_ACCOUNT", "")
 
-# Hardcoded locations as a fallback (if any)
+if not account_name:
+    logger.error("FIREBOLT_ACCOUNT environment variable is not set!")
+    raise Exception("FIREBOLT_ACCOUNT environment variable must be set!")
+
+
 location_polygons = {}
 
 def connect_to_firebolt():
@@ -49,8 +58,41 @@ def connect_to_firebolt():
     )
     return connection
 
+# Define a connection pool class using a thread-safe queue.
+class FireboltConnectionPool:
+    def __init__(self, pool_size):
+        self.pool = queue.Queue(maxsize=pool_size)
+        self.pool_size = pool_size
+        self.initialize_pool()
+
+    def initialize_pool(self):
+        for _ in range(self.pool_size):
+            conn = connect_to_firebolt()
+            self.pool.put(conn)
+
+    def get_connection(self, timeout=None):
+        try:
+            return self.pool.get(timeout=timeout)
+        except queue.Empty:
+            raise Exception("No available connection in the pool.")
+
+    def return_connection(self, conn):
+        try:
+            self.pool.put(conn, block=False)
+        except queue.Full:
+            conn.close()
+
+    def close_all(self):
+        while not self.pool.empty():
+            conn = self.pool.get()
+            conn.close()
+
+# Create a global connection pool instance.
+POOL_SIZE = 5
+connection_pool = FireboltConnectionPool(POOL_SIZE)
+
 app = Flask(__name__)
-app.config["MAPBOX_TOKEN"] = MAPBOX_TOKEN  # pass token to templates
+app.config["MAPBOX_TOKEN"] = MAPBOX_TOKEN
 
 def build_query(location, severity, start_date, end_date):
     polygon_wkt = location_polygons.get(location)
@@ -105,7 +147,8 @@ def get_geojson():
 
     connection = None
     try:
-        connection = connect_to_firebolt()
+        # Obtain a connection from the pool
+        connection = connection_pool.get_connection(timeout=10)
         cursor = connection.cursor()
         start_time = time.time()
         cursor.execute(query)
@@ -157,7 +200,8 @@ def get_geojson():
     finally:
         if connection:
             try:
-                connection.close()
+                # Return the connection back to the pool instead of closing it.
+                connection_pool.return_connection(connection)
             except Exception:
                 pass
 
