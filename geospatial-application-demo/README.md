@@ -58,7 +58,7 @@ firebolt-demo/
 
 2. **Dynamic Querying:**  
    - Based on the chosen location and filters (severity and year range), the app builds a dynamic SQL query.
-   - The query is executed on Firebolt, which returns accident data in GeoJSON format.
+   - The query is executed on Firebolt, which returns accident data in WKT format.
 
 3. **Map Visualization:**  
    - The GeoJSON data is rendered on a Mapbox map.
