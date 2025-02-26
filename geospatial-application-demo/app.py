@@ -46,7 +46,6 @@ if not account_name:
     raise Exception("FIREBOLT_ACCOUNT environment variable must be set!")
 
 
-location_polygons = {}
 
 def connect_to_firebolt():
     credentials = ClientCredentials(client_id=client_id, client_secret=client_secret)
@@ -95,19 +94,19 @@ app = Flask(__name__)
 app.config["MAPBOX_TOKEN"] = MAPBOX_TOKEN
 
 def build_query(location, severity, start_date, end_date):
-    polygon_wkt = location_polygons.get(location)
-    if not polygon_wkt:
-        try:
-            gdf = ox.geocode_to_gdf(location)
-        except Exception as e:
-            logger.error(f"Geocoding error for '{location}': {str(e)}")
-            raise Exception(f"Geocoding error: {str(e)}")
-        if gdf.empty:
-            raise Exception(f"Location '{location}' not found")
-        geom = gdf.iloc[0].geometry
-        if geom.geom_type == "Point":
-            geom = geom.buffer(0.01)
-        polygon_wkt = geom.wkt
+    # Always perform geocoding to get the polygon in WKT format.
+    try:
+        gdf = ox.geocode_to_gdf(location)
+    except Exception as e:
+        logger.error(f"Geocoding error for '{location}': {str(e)}")
+        raise Exception(f"Geocoding error: {str(e)}")
+    if gdf.empty:
+        raise Exception(f"Location '{location}' not found")
+    
+    geom = gdf.iloc[0].geometry
+    if geom.geom_type == "Point":
+        geom = geom.buffer(0.01)
+    polygon_wkt = geom.wkt  # Get the WKT representation.
 
     query = f"""
     SELECT DISTINCT
@@ -132,6 +131,7 @@ def build_query(location, severity, start_date, end_date):
         query += f"\nAND to_date(start_time) <= '{end_date}'"
     query += ";"
     return query
+
 
 @app.route('/geojson')
 def get_geojson():
@@ -207,7 +207,8 @@ def get_geojson():
 
 @app.route('/')
 def index():
-    return render_template('index.html', locations=list(location_polygons.keys()))
+    return render_template('index.html', locations=[])
+
 
 if __name__ == '__main__':
     app.run(debug=True)
