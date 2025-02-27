@@ -21,9 +21,10 @@ jobs:
 
       - name: Create deployment directory
         run: |
+          mkdir -p deploy
+          cp index.html deploy/index.html
           mkdir -p deploy/geospatial
           cp geospatial/index.html deploy/geospatial/
-          cp index.html deploy/
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
