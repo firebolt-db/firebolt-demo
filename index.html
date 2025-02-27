@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebolt Demos</title>
+    <style>
+        :root {
+            --firebolt-red: #FF3B30;
+            --text-color: #1A1F36;
+            --bg-color: #fff;
+            --gradient-bg: linear-gradient(90deg, #F7F9FC 0%, #FFF5F5 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background: var(--gradient-bg);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: transparent;
+            padding: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .logo {
+            color: var(--firebolt-red);
+            font-size: 1.75rem;
+            font-weight: 800;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+            text-transform: uppercase;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 2rem 6rem;
+        }
+
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+            font-weight: 700;
+            letter-spacing: -1px;
+            color: var(--text-color);
+        }
+
+        main > p {
+            font-size: 1.25rem;
+            color: #4A5578;
+            max-width: 600px;
+            margin-bottom: 3rem;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2.5rem;
+            margin-top: 3rem;
+        }
+
+        .demo-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .demo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(255,59,48,0.12);
+        }
+
+        .demo-card h3 {
+            color: var(--firebolt-red);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .demo-card p {
+            margin-bottom: 2rem;
+            color: #4A5578;
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }
+
+        .demo-link {
+            display: inline-flex;
+            align-items: center;
+            background: var(--firebolt-red);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+        }
+
+        .demo-link:hover {
+            background: #E62E24;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3rem;
+            }
+            
+            .demo-card {
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="#" class="logo">Firebolt</a>
+    </header>
+
+    <main>
+        <h1>Interactive Demos</h1>
+        <p>Experience the power and capabilities of Firebolt through our interactive demonstrations, showcasing real-world applications of our data warehouse technology.</p>
+
+        <div class="demo-grid">
+            <div class="demo-card">
+                <h3>Geospatial Demo</h3>
+                <p>Explore Firebolt's geospatial capabilities using the US Accidents Dataset (2016-2023). Analyze accident records across 49 states with interactive queries and visualizations.</p>
+                <a href="https://demo.docs.firebolt.io/geospatial/" class="demo-link">Try Demo</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
