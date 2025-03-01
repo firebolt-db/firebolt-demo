@@ -3,14 +3,14 @@ import sys
 import time
 import logging
 import json
+import queue
 from flask import Flask, jsonify, render_template, request
 from shapely import wkt
 from shapely.geometry import mapping
 import osmnx as ox
-import queue
+from dotenv import load_dotenv
 
 # Load environment variables from .env file
-from dotenv import load_dotenv
 load_dotenv()
 
 # Import Firebolt client modules
@@ -34,7 +34,9 @@ ch = logging.StreamHandler(sys.stdout)
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
-
+# -----------------------------
+# Firebolt Credentials
+# -----------------------------
 client_id = os.getenv("FIREBOLT_CLIENT_ID", "")
 client_secret = os.getenv("FIREBOLT_CLIENT_SECRET", "")
 engine_name = os.getenv("FIREBOLT_ENGINE_NAME", "")
@@ -45,8 +47,6 @@ if not account_name:
     logger.error("FIREBOLT_ACCOUNT environment variable is not set!")
     raise Exception("FIREBOLT_ACCOUNT environment variable must be set!")
 
-
-
 def connect_to_firebolt():
     credentials = ClientCredentials(client_id=client_id, client_secret=client_secret)
     connection = connect(
@@ -56,42 +56,6 @@ def connect_to_firebolt():
         auth=credentials,
     )
     return connection
-
-# Define a connection pool class using a thread-safe queue.
-class FireboltConnectionPool:
-    def __init__(self, pool_size):
-        self.pool = queue.Queue(maxsize=pool_size)
-        self.pool_size = pool_size
-        self.initialize_pool()
-
-    def initialize_pool(self):
-        for _ in range(self.pool_size):
-            conn = connect_to_firebolt()
-            self.pool.put(conn)
-
-    def get_connection(self, timeout=None):
-        try:
-            return self.pool.get(timeout=timeout)
-        except queue.Empty:
-            raise Exception("No available connection in the pool.")
-
-    def return_connection(self, conn):
-        try:
-            self.pool.put(conn, block=False)
-        except queue.Full:
-            conn.close()
-
-    def close_all(self):
-        while not self.pool.empty():
-            conn = self.pool.get()
-            conn.close()
-
-# Create a global connection pool instance.
-POOL_SIZE = 5
-connection_pool = FireboltConnectionPool(POOL_SIZE)
-
-app = Flask(__name__)
-app.config["MAPBOX_TOKEN"] = MAPBOX_TOKEN
 
 def build_query(location, severity, start_date, end_date):
     # Always perform geocoding to get the polygon in WKT format.
@@ -132,6 +96,71 @@ def build_query(location, severity, start_date, end_date):
     query += ";"
     return query
 
+# -----------------------------
+# Connection Pool Classes
+# -----------------------------
+class FireboltConnectionPool:
+    def __init__(self, pool_size):
+        self.pool = queue.Queue(maxsize=pool_size)
+        self.pool_size = pool_size
+        self.initialize_pool()
+
+    def initialize_pool(self):
+        for _ in range(self.pool_size):
+            conn = connect_to_firebolt()
+            self.pool.put(conn)
+
+    def get_connection(self, timeout=None):
+        try:
+            return self.pool.get(timeout=timeout)
+        except queue.Empty:
+            raise Exception("No available connection in the pool.")
+
+    def return_connection(self, conn):
+        try:
+            self.pool.put(conn, block=False)
+        except queue.Full:
+            conn.close()
+
+    def close_all(self):
+        while not self.pool.empty():
+            conn = self.pool.get()
+            conn.close()
+
+class FireboltConnectionPoolSmart(FireboltConnectionPool):
+    """
+    Smart connection pool that executes the query and only replaces
+    the connection if the query fails.
+    """
+    def execute_query(self, query, timeout=10):
+        conn = self.get_connection(timeout=timeout)
+        try:
+            cursor = conn.cursor()
+            start_time = time.time()
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            elapsed_time = time.time() - start_time
+            cursor.close()
+            # If query executed successfully, return connection to pool.
+            self.return_connection(conn)
+            return rows, elapsed_time
+        except Exception as e:
+            logger.error(f"Query execution failed, replacing connection: {e}")
+            try:
+                conn.close()
+            except Exception as e2:
+                logger.error(f"Error closing faulty connection: {e2}")
+            # Replace the bad connection with a new one.
+            new_conn = connect_to_firebolt()
+            self.return_connection(new_conn)
+            raise e
+
+
+POOL_SIZE = 5
+connection_pool = FireboltConnectionPoolSmart(POOL_SIZE)
+
+app = Flask(__name__)
+app.config["MAPBOX_TOKEN"] = MAPBOX_TOKEN
 
 @app.route('/geojson')
 def get_geojson():
@@ -142,18 +171,15 @@ def get_geojson():
 
     try:
         query = build_query(location, severity, start_date, end_date)
+        logger.info(f"Executing Query:\n{query}")
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    connection = None
     try:
-        # Obtain a connection from the pool
-        connection = connection_pool.get_connection(timeout=10)
-        cursor = connection.cursor()
+        # Instead of manually acquiring a connection and executing the query,
+        # we use our smart pool's execute_query method.
         start_time = time.time()
-        cursor.execute(query)
-        rows = cursor.fetchall()
-        elapsed_time = time.time() - start_time
+        rows, elapsed_time = connection_pool.execute_query(query)
         logger.info(f"Query executed in {elapsed_time:.4f} seconds for location: {location}")
 
         if not rows:
@@ -184,7 +210,7 @@ def get_geojson():
             "features": features
         }
         accident_count = len(features)
-        data_scanned = cursor.rowcount if cursor.rowcount is not None else "N/A"
+        data_scanned = "N/A" 
 
         response = {
             "geojson": geojson_obj,
@@ -197,18 +223,10 @@ def get_geojson():
     except Exception as e:
         logger.error(f"Error executing query: {str(e)}")
         return jsonify({"error": str(e)}), 500
-    finally:
-        if connection:
-            try:
-                # Return the connection back to the pool instead of closing it.
-                connection_pool.return_connection(connection)
-            except Exception:
-                pass
 
 @app.route('/')
 def index():
     return render_template('index.html', locations=[])
-
 
 if __name__ == '__main__':
     app.run(debug=True)
