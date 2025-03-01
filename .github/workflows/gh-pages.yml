@@ -1,11 +1,11 @@
-name: Deploy to Geospatial Demo to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'geospatial/**'
+      - '**'
   # Add manual trigger
   workflow_dispatch:
 
@@ -21,6 +21,8 @@ jobs:
 
       - name: Create deployment directory
         run: |
+          mkdir -p deploy
+          cp index.html deploy/index.html
           mkdir -p deploy/geospatial
           cp geospatial/index.html deploy/geospatial/
 
@@ -28,6 +30,5 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
-          folder: deploy/geospatial
-          clean: true
-          target-folder: geospatial 
+          folder: deploy
+          clean: true 
