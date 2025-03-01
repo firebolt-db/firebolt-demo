@@ -210,7 +210,7 @@ def get_geojson():
             "features": features
         }
         accident_count = len(features)
-        data_scanned = "N/A" 
+        data_scanned = accident_count 
 
         response = {
             "geojson": geojson_obj,
