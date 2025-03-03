@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Accident Data Visualization</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" type="text/css" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.13.0/mapbox-gl.js"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- Control Panel -->
+  <div id="control-panel">
+    <h3>Visualization</h3>
+    <label>
+      <input type="radio" name="viz" value="cluster" checked />
+      Clustered View
+    </label>
+    <label>
+      <input type="radio" name="viz" value="heatmap" />
+      Heatmap View
+    </label>
+    <hr />
+    <label>
+      <input type="checkbox" id="toggle-query-info" />
+      Show Query Info
+    </label>
+    <!-- Filter Controls -->
+    <div id="filter-controls">
+      <h3>Filters</h3>
+      <label for="severity-filter">Severity:</label>
+      <select id="severity-filter">
+        <option value="">All</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+      </select>
+      <!-- Year Range Sliders -->
+      <div class="slider-row">
+        <label>Start:</label>
+        <input type="range" id="start-year-range" min="2010" max="2025" value="2015" step="1" />
+        <div class="slider-value" id="start-year-val">2015</div>
+      </div>
+      <div class="slider-row">
+        <label>End:</label>
+        <input type="range" id="end-year-range" min="2010" max="2025" value="2023" step="1" />
+        <div class="slider-value" id="end-year-val">2023</div>
+      </div>
+    </div>
+    <div id="style-switcher">
+      <h3>Map Styles</h3>
+      <button data-style="mapbox://styles/mapbox/streets-v11">Streets</button>
+      <button data-style="mapbox://styles/mapbox/dark-v10">Dark</button>
+      <button data-style="mapbox://styles/mapbox/light-v10">Light</button>
+      <button data-style="mapbox://styles/mapbox/satellite-v9">Satellite</button>
+    </div>
+    <div id="sql-query"></div>
+    <div id="accident-count">Accidents found: --</div>
+  </div>
+
+  <div id="query-info">
+    <div id="engine-status" style="font-weight:bold; color:blue;">Engine starting...</div>
+    <div id="query-time">Query time: --</div>
+    <div id="data-scanned">Data scanned: --</div>
+  </div>
+
+  <script>
+    window.MAPBOX_TOKEN = "{{ config['MAPBOX_TOKEN'] }}";
+  </script>
+  
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
