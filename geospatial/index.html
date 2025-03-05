@@ -772,10 +772,10 @@
                 }
 
                 // Add warning message if results are limited
-                if (data.data.length >= 100) {
+                if (data.data.length >= 100000) {
                     resultsDiv.innerHTML = `
                         <p style="color: #856404; background-color: #fff3cd; padding: 12px; border: 1px solid #ffeeba; border-radius: 4px; margin-bottom: 15px;">
-                            <strong>Note:</strong> Query results are limited to 100 rows
+                            <strong>Note:</strong> Query results are limited to 100,000 rows
                         </p>`;
                 } else {
                     resultsDiv.innerHTML = '';
