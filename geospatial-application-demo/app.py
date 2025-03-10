@@ -130,18 +130,20 @@ class FireboltConnectionPool:
 class FireboltConnectionPoolSmart(FireboltConnectionPool):
     """
     Smart connection pool that executes the query and only replaces
-    the connection if the query fails.
+    the connection if the query fails. Uses a persistent cursor per connection.
     """
     def execute_query(self, query, timeout=10):
         conn = self.get_connection(timeout=timeout)
         try:
-            cursor = conn.cursor()
+            # Use persistent cursor: if it doesn't exist, create it once.
+            if not hasattr(conn, '_persistent_cursor'):
+                conn._persistent_cursor = conn.cursor()
+            cursor = conn._persistent_cursor
             start_time = time.time()
             cursor.execute(query)
             rows = cursor.fetchall()
             elapsed_time = time.time() - start_time
-            cursor.close()
-            # If query executed successfully, return connection to pool.
+            # Do NOT close the persistent cursor so it can be reused.
             self.return_connection(conn)
             return rows, elapsed_time
         except Exception as e:
@@ -154,7 +156,6 @@ class FireboltConnectionPoolSmart(FireboltConnectionPool):
             new_conn = connect_to_firebolt()
             self.return_connection(new_conn)
             raise e
-
 
 POOL_SIZE = 5
 connection_pool = FireboltConnectionPoolSmart(POOL_SIZE)
@@ -176,8 +177,7 @@ def get_geojson():
         return jsonify({"error": str(e)}), 400
 
     try:
-        # Instead of manually acquiring a connection and executing the query,
-        # we use our smart pool's execute_query method.
+        # Use the smart pool's execute_query method with the persistent cursor.
         start_time = time.time()
         rows, elapsed_time = connection_pool.execute_query(query)
         logger.info(f"Query executed in {elapsed_time:.4f} seconds for location: {location}")
@@ -210,7 +210,7 @@ def get_geojson():
             "features": features
         }
         accident_count = len(features)
-        data_scanned = accident_count 
+        data_scanned = accident_count
 
         response = {
             "geojson": geojson_obj,
