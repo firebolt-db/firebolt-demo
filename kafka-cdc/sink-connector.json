@@ -1,0 +1,17 @@
+{
+    "name": "firebolt-sink-connector",
+    "config": {
+        "connector.class": "io.debezium.connector.jdbc.JdbcSinkConnector",
+        "topics": "cdc.public.demo, cdc.public.users, cdc.public.scores",
+        "connection.url": "jdbc:firebolt:<your Firebolt database>?account=<your Firebolt account>&engine=<your Firebolt engine>&merge_prepared_statement_batches=true",
+        "connection.username": "<your Firebolt service account ID>",
+        "connection.password": "<your Firebolt secret key>",
+        "hibernate.dialect": "org.hibernate.dialect.PostgreSQLDialect",
+        "primary.key.mode": "none",
+        "primary.key.fields": "id",
+        "insert.mode": "insert",  
+        "schema.evolution": "basic",
+        "delete.enabled": "false",
+        "quote.identifiers": true
+    }
+}
