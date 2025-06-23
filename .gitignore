@@ -1,1 +1,5 @@
 **/.DS_Store
+fb_ai_demo/.env
+fb_ai_demo/.venv
+fb_ai_demo/__pycache__
+fb_ai_demo/.DS_STORE
