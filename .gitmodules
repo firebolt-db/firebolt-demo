@@ -1,0 +1,3 @@
+[submodule "firebolt-demo/fb_ai_demo"]
+	path = firebolt-demo/fb_ai_demo
+	url = git@github.com:firebolt-analytics/fb_ai_demo.git
