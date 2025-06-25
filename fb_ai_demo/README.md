@@ -1,6 +1,6 @@
 # Firebolt AI Chatbot Demo
 
-A reference implementation of a **Retrieval-Augmented Generation (RAG) chatbot** powered by [Chainlit](https://docs.chainlit.io/) for the chat UI, **OpenAI** for the LLM, and **Firebolt** as the analytical database and vector store. It lets you ask questions in everyday language and receive answers backed by SQL queries that run live on Firebolt.
+This is a **Retrieval-Augmented Generation (RAG) chatbot** powered by [Chainlit](https://docs.chainlit.io/) for the chat UI, **OpenAI** for the LLM, and **Firebolt** as the analytical database and vector store. It lets you ask questions in everyday language and receive answers backed by SQL queries that run live on Firebolt.
 
 ---
 
@@ -90,8 +90,8 @@ FIREBOLT_DATABASE_NAME="..."
 FIREBOLT_ENGINE_NAME="..."
 ```
 
-1. **Save & close** the file—Chainlit will pick it up automatically.
-2. **(Optional) Fine-tune behaviour** in `src/system_prompt.md`. For example, tighten the SQL style guide or change the persona from helpful assistant to pedantic mentor.
+1. Once you're done editing, **save & close** the file—Chainlit will pick it up automatically.
+2. **Optionally**, you can fine-tune the behaviour in `src/system_prompt.md`. For example, tighten the SQL style guide or change the persona from helpful assistant to pedantic mentor.
 
 
 ---
@@ -108,19 +108,35 @@ You can pass the `--watch` flag to enable auto-reloading for development.
 
 ---
 
-## 5 – Asking Good Questions
+## 5 – Crafting Effective Prompts
 
-Try queries like:
+The demo works with **any** Firebolt table, so think in terms of the building blocks of *your* data rather than the specific marketing example below. A good prompt clearly states:
 
-* *“How many clicks were driven by each search engine in **Q4 2024**?”*
-* *“Refine a query that finds the **top 10 keywords** for Google in that period.”*
-* *“Show me a bar chart of clicks per engine.”*
+1. **Metric** – what you want counted or aggregated
+2. **Dimension** – how you want the results broken down
+3. **Filters & time-frames** – which records to include or exclude
+4. **Output format** – plain table, chart, CSV, explanation, etc.
 
-The assistant follows a simple three step flow:
+Examples you can adapt (replace the bold placeholders with your own):
 
-1. Generate a **SQL** statement.
-2. Execute it on Firebolt.
-3. Optionally call custom tools (e.g. `PlotTool`, `CsvTool`, `ExplainTool`) to visualise the result using [Vega-Lite](https://vega.github.io/vega-lite/).
+* *“How many **<metric>** were recorded for each **<dimension>** in **<time-period>**?”*
+  → e.g. *“How many orders were recorded for each country in May 2025?”*
+
+* *“Refine a SQL query that returns the **top N <dimension>** by **<metric>** during **<time-period>**.”*
+  → e.g. *“Refine a query that finds the top 10 error codes by occurrence today.”*
+
+* *“Show me a **<chart-type>** of **<metric>** per **<dimension>**.”*
+  → e.g. *“Show me a line chart of revenue per month.”*
+
+> **Tip:** Descriptive column names make all the difference. Columns like `page_views`, `event_time`, or `country_code` provide context the model can reason about, whereas `col1` and `col2` leave it guessing.
+
+### How the assistant responds
+
+1. **Generate SQL** tailored to your prompt
+2. **Run it on Firebolt**
+3. Optionally invoke custom tools (e.g. `PlotTool`, `CsvTool`, `ExplainTool`) to visualise or post-process the result with [Vega-Lite](https://vega.github.io/vega-lite/)
+
+Keeping your schema well-named and your prompts explicit ensures the assistant can produce accurate SQL and meaningful insights on any dataset.
 
 ---
 
@@ -135,13 +151,5 @@ The assistant follows a simple three step flow:
 | Cannot bind to port `8000`          | Pass `--port 8500` or kill the process that owns 8000 (`lsof -i :8000`)                 |
 
 ---
-
-## 7 – Roadmap & Ideas
-
-* **Streaming** partial LLM responses
-* **Explain Plan** tab that shows Firebolt’s query plan
-* Plug-in system for domain-specific tools (e.g. Jira, Slack)
-* One-click deploy to **Render** / **Fly.io**
-* OAuth login to protect prod instances
 
 Questions / ideas? Open an issue or PR—contributions are welcome!
