@@ -108,36 +108,67 @@ You can pass the `--watch` flag to enable auto-reloading for development.
 
 ---
 
+
 ## 5 – Crafting Effective Prompts
 
-The demo works with **any** Firebolt table, so think in terms of the building blocks of *your* data rather than the specific marketing example below. A good prompt clearly states:
+### 1. Give the model something it can reason about
 
-1. **Metric** – what you want counted or aggregated
-2. **Dimension** – how you want the results broken down
-3. **Filters & time-frames** – which records to include or exclude
-4. **Output format** – plain table, chart, CSV, explanation, etc.
+The AI can only build good SQL if it can see what your columns mean.
 
-Examples you can adapt (replace the bold placeholders with your own):
+| ✅ Works well                               | ❌ Will fail         |
+| ------------------------------------------ | ------------------- |
+| `page_views`, `event_time`, `country_code` | `col1`, `col2`, `x` |
 
-* *“How many **<metric>** were recorded for each **<dimension>** in **<time-period>**?”*
-  → e.g. *“How many orders were recorded for each country in May 2025?”*
+**Options if your table already has generic names**
 
-* *“Refine a SQL query that returns the **top N <dimension>** by **<metric>** during **<time-period>**.”*
-  → e.g. *“Refine a query that finds the top 10 error codes by occurrence today.”*
+1. **Create a copy with better names (recommended)**
+   Firebolt does not yet support `ALTER TABLE RENAME COLUMN`, so use a *create-table-as-select* (CTAS):
 
-* *“Show me a **<chart-type>** of **<metric>** per **<dimension>**.”*
-  → e.g. *“Show me a line chart of revenue per month.”*
+   ```sql
+   CREATE TABLE orders_clean AS
+   SELECT
+     col1  AS order_id,
+     col2  AS customer_id,
+     col3  AS order_date,
+     col4  AS total_amount
+   FROM orders_raw;
+   ```
 
-> **Tip:** Descriptive column names make all the difference. Columns like `page_views`, `event_time`, or `country_code` provide context the model can reason about, whereas `col1` and `col2` leave it guessing.
+   Point the demo at `orders_clean`.
 
-### How the assistant responds
+2. **Add column comments instead**
+   If you cannot copy the table, you can annotate the existing one:
 
-1. **Generate SQL** tailored to your prompt
-2. **Run it on Firebolt**
-3. Optionally invoke custom tools (e.g. `PlotTool`, `CsvTool`, `ExplainTool`) to visualise or post-process the result with [Vega-Lite](https://vega.github.io/vega-lite/)
+   ```sql
+   COMMENT ON COLUMN orders_raw.col1 IS 'order_id – unique ID of the order';
+   COMMENT ON COLUMN orders_raw.col2 IS 'customer_id – shopper who placed the order';
+   COMMENT ON COLUMN orders_raw.col3 IS 'order_date – when the order was placed';
+   COMMENT ON COLUMN orders_raw.col4 IS 'total_amount – order value in USD';
+   ```
 
-Keeping your schema well-named and your prompts explicit ensures the assistant can produce accurate SQL and meaningful insights on any dataset.
+   The assistant will read these comments when generating queries.
 
+---
+
+## Asking good questions
+
+The demo works with **any** Firebolt table, so think in terms of *your* data:
+
+1. `Metric` – what you want counted or aggregated
+2. `Dimension` – how you want the results broken down
+3. `Filters & time‑frames` – which records to include or exclude
+4. `Output` – table, chart, CSV, explanation, etc.
+
+Examples you can adapt (replace the **bold** bits):
+
+* *“How many **<metric>** were recorded for each **<dimension>** in **\<time‑period>**?”*
+  → *“How many orders were recorded for each country in May 2025?”*
+
+* *“Refine a SQL query that returns the **top N <dimension>** by **<metric>** during **\<time‑period>**.”*
+  → *“Refine a query that finds the top 10 error codes by occurrence today.”*
+
+* *“Show me a **\<chart‑type>** of **<metric>** per **<dimension>**.”*
+  → *“Show me a line chart of revenue per month.”*
 ---
 
 
