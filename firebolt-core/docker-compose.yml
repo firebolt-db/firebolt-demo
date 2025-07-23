@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  firebolt-core:
+    image: ghcr.io/firebolt-db/firebolt-core:preview-rc
+    container_name: firebolt-core
+    ports:
+      - "127.0.0.1:3473:3473"
+    volumes:
+      - ./firebolt-core-data:/firebolt-core/volume
+    ulimits:
+      memlock: 8589934592
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      - NODE=${NODE:-0}
+    restart: unless-stopped
+    
+  streamlit-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    container_name: firebolt-streamlit
+    ports:
+      - "8501:8501"
+    depends_on:
+      - firebolt-core
+    environment:
+      - FIREBOLT_HOST=firebolt-core
+    volumes:
+      - .:/app
+    restart: unless-stopped
+
+# For multi-node setups (override this file)
+# Use: NODE=1 docker compose -f docker-compose.yml -f docker-compose.nodeN.yml up 
