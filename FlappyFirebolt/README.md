@@ -18,8 +18,8 @@ A Flappy Bird clone built with Python and Pygame, featuring:
 
 ### 1. Clone the repository
 ```
-git clone https://github.com/tuitejc-firebolt/FlappyFirebolt.git
-cd FlappyFirebolt
+git clone https://github.com/firebolt-db/firebolt-demo.git
+cd firebolt-demo/FlappyFirebolt
 ```
 
 ### 2. Create and activate a virtual environment
@@ -40,7 +40,7 @@ pip install -r requirements.txt
 ```
 
 ### 4. Configure Firebolt credentials
-Create a `.env` file in the project root with the following content:
+Create a `.env` file in the FlappyFirebolt folder with the following content:
 ```
 FIREBOLT_API_ENDPOINT=api.app.firebolt.io
 FIREBOLT_API_KEY=your_client_id_here
