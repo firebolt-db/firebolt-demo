@@ -77,16 +77,16 @@ The app will automatically:
 
 ## What the Demo Does
 
-### **Which Tab Should I Start With?**
+### **Required Workflow**
 
-** RECOMMENDED WORKFLOW:**
-1. **Start with "Ingestion Pipeline" tab** - This populates your database with test data
-2. **Then switch to "Query Load (QPS)" tab** - This tests query performance on the populated data
+**You must start with the "Ingestion Pipeline" tab first:**
+1. **Run "Ingestion Pipeline" tab** - Populates your database with test data
+2. **Then use "Query Load (QPS)" tab** - Tests query performance on the populated data
 
-**Why this order?**
-- **Ingestion Pipeline** performs INSERT/UPDATE/DELETE operations to create realistic test data
-- **Query Load (QPS)** requires existing data to query against for meaningful performance metrics
-- Starting with QPS on an empty table will result in mostly empty query results
+**Why this order is required:**
+- **Ingestion Pipeline** creates the test data that queries need
+- **Query Load (QPS)** cannot produce meaningful results on an empty table
+- Without data, QPS tests will return empty results and invalid performance metrics
 
 ---
 
@@ -144,8 +144,8 @@ PARTITION BY ltv_date;
 
 **Use Cache?**:
 - ✅ **Checked**: Enables both result_cache and subresult_cache (faster responses)
-- ❌ **Unchecked**: Disables subresult_cache but keeps result_cache (tests raw performance)
-- **Use case**: Disable to test true query performance without caching benefits
+- ❌ **Unchecked**: Disables result_cache but keeps subresult_cache (tests raw performance)
+- **Use case**: Disable to test true query performance without result caching benefits
 
 **Set optimizer_mode=user_guided**:
 - ✅ **Checked**: Uses user-guided optimization (faster for known workloads)

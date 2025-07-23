@@ -221,8 +221,8 @@ with tabs[0]:
             cur.execute("SET optimizer_mode=user_guided")
 
         if not use_cache:
-            cur.execute("SET enable_result_cache = TRUE")
-            cur.execute("SET enable_subresult_cache = FALSE")
+            cur.execute("SET enable_result_cache = FALSE")
+            cur.execute("SET enable_subresult_cache = TRUE")
             print("Cache is DISABLED")
         else:
             cur.execute("SET enable_result_cache = TRUE")
