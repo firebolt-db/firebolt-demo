@@ -1,6 +1,6 @@
 # Firebolt AI Chatbot Demo
 
-This is a **Retrieval-Augmented Generation (RAG) chatbot** powered by [Chainlit](https://docs.chainlit.io/) for the chat UI, **OpenAI** for the LLM, and **Firebolt** as the analytical database and vector store. It lets you ask questions in everyday language and receive answers backed by SQL queries that run live on Firebolt.
+This is a **Retrieval-Augmented Generation (RAG) chatbot** powered by [Chainlit](https://docs.chainlit.io/) for the chat UI, **OpenAI** for the LLM, and **Firebolt** as the analytical database and vector store. Ask questions in everyday language and get answers backed by SQL queries that run live on Firebolt.
 
 ---
 
@@ -20,8 +20,8 @@ This is a **Retrieval-Augmented Generation (RAG) chatbot** powered by [Chainlit]
 
 ```bash
 # 1. Clone and step inside
-git clone https://github.com/your-org/fb_ai_demo.git
-cd fb_ai_demo
+git clone https://github.com/firebolt-db/firebolt-demo.git
+cd firebolt-demo/fb_ai_demo
 
 # 2. Create + activate a virtualenv (Python ≥ 3.9)
 python3 -m venv .venv
@@ -90,8 +90,7 @@ FIREBOLT_DATABASE_NAME="..."
 FIREBOLT_ENGINE_NAME="..."
 ```
 
-1. Once you're done editing, **save & close** the file—Chainlit will pick it up automatically.
-2. **Optionally**, you can fine-tune the behaviour in `src/system_prompt.md`. For example, tighten the SQL style guide or change the persona from helpful assistant to pedantic mentor.
+Save and close the file. Chainlit will pick it up automatically. You can fine-tune behavior in `src/system_prompt.md` to adjust the SQL style guide or change the assistant persona.
 
 
 ---
@@ -109,66 +108,52 @@ You can pass the `--watch` flag to enable auto-reloading for development.
 ---
 
 
-## 5 – Crafting Effective Prompts
+## 5 – Schema Setup
 
-### 1. Give the model something it can reason about
+Use descriptive column names. The AI builds better SQL when it understands your data structure.
 
-The AI can only build good SQL if it can see what your columns mean.
+| Works well                                  | Will fail           |
+| ------------------------------------------- | ------------------- |
+| `page_views`, `event_time`, `country_code`  | `col1`, `col2`, `x` |
 
-| ✅ Works well                               | ❌ Will fail         |
-| ------------------------------------------ | ------------------- |
-| `page_views`, `event_time`, `country_code` | `col1`, `col2`, `x` |
+**Fix generic column names**
 
-**Options if your table already has generic names**
+Create a table with better names:
 
-1. **Create a copy with better names (recommended)**
-   Firebolt does not yet support `ALTER TABLE RENAME COLUMN`, so use a *create-table-as-select* (CTAS):
+```sql
+CREATE TABLE orders_clean AS
+SELECT
+  col1  AS order_id,
+  col2  AS customer_id,
+  col3  AS order_date,
+  col4  AS total_amount
+FROM orders_raw;
+```
 
-   ```sql
-   CREATE TABLE orders_clean AS
-   SELECT
-     col1  AS order_id,
-     col2  AS customer_id,
-     col3  AS order_date,
-     col4  AS total_amount
-   FROM orders_raw;
-   ```
+Point the demo at `orders_clean`.
 
-   Point the demo at `orders_clean`.
+Alternatively, add column comments:
 
-2. **Add column comments instead**
-   If you cannot copy the table, you can annotate the existing one:
+```sql
+COMMENT ON COLUMN orders_raw.col1 IS 'order_id';
+COMMENT ON COLUMN orders_raw.col2 IS 'customer_id';
+COMMENT ON COLUMN orders_raw.col3 IS 'order_date';
+COMMENT ON COLUMN orders_raw.col4 IS 'total_amount';
+```
 
-   ```sql
-   COMMENT ON COLUMN orders_raw.col1 IS 'order_id – unique ID of the order';
-   COMMENT ON COLUMN orders_raw.col2 IS 'customer_id – shopper who placed the order';
-   COMMENT ON COLUMN orders_raw.col3 IS 'order_date – when the order was placed';
-   COMMENT ON COLUMN orders_raw.col4 IS 'total_amount – order value in USD';
-   ```
-
-   The assistant will read these comments when generating queries.
+The assistant reads these comments when generating queries.
 
 ---
 
-## Asking good questions
+## Usage
 
-The demo works with **any** Firebolt table, so think in terms of *your* data:
+Ask questions in natural language. The assistant generates SQL, runs it on Firebolt, and creates visualizations when helpful.
 
-1. `Metric` – what you want counted or aggregated
-2. `Dimension` – how you want the results broken down
-3. `Filters & time‑frames` – which records to include or exclude
-4. `Output` – table, chart, CSV, explanation, etc.
-
-Examples you can adapt (replace the **bold** bits):
-
-* *“How many **<metric>** were recorded for each **<dimension>** in **\<time‑period>**?”*
-  → *“How many orders were recorded for each country in May 2025?”*
-
-* *“Refine a SQL query that returns the **top N <dimension>** by **<metric>** during **\<time‑period>**.”*
-  → *“Refine a query that finds the top 10 error codes by occurrence today.”*
-
-* *“Show me a **\<chart‑type>** of **<metric>** per **<dimension>**.”*
-  → *“Show me a line chart of revenue per month.”*
+Examples:
+* "What were our top products last quarter?"
+* "Show revenue trends by month"
+* "Which regions perform best?"
+* "Plot customer growth over time"
 ---
 
 
