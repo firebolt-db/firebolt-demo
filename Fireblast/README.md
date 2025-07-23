@@ -144,8 +144,6 @@ PARTITION BY ltv_date;
 
 **Use Cache?**:
 - ✅ **Checked**: Enables both result_cache and subresult_cache (faster responses)
-- ❌ **Unchecked**: Disables result_cache but keeps subresult_cache (tests raw performance)
-- **Use case**: Disable to test true query performance without result caching benefits
 
 **Set optimizer_mode=user_guided**:
 - ✅ **Checked**: Uses user-guided optimization (faster for known workloads)
