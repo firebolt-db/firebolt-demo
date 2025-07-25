@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "express": "^4.21.2",
+    "firebolt-sdk": "^0.0.111",
+    "k6": "^0.0.0",
+    "pg": "^8.14.1",
+    "snowflake-sdk": "^2.0.4"
+  }
+}

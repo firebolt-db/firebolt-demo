@@ -1,0 +1,230 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PYTHON_VERSION: '3.8'
+  NODE_VERSION: '18'
+
+jobs:
+  lint-and-format:
+    runs-on: ubuntu-latest
+    name: Code Quality Checks
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Cache Python dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements-dev.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+        
+    - name: Run Black formatter check
+      run: |
+        cd src/python
+        black --check --diff src/
+        
+    - name: Run isort import sorting check
+      run: |
+        cd src/python
+        isort --check-only --diff src/
+        
+    - name: Run flake8 linting
+      run: |
+        cd src/python
+        flake8 src/
+        
+    - name: Run mypy type checking
+      run: |
+        cd src/python
+        mypy src/
+        continue-on-error: true  # Type checking might have issues initially
+
+  security-scan:
+    runs-on: ubuntu-latest
+    name: Security Scanning
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety bandit[toml]
+        
+    - name: Run safety vulnerability scan
+      run: |
+        cd src/python
+        safety check --json || true
+        
+    - name: Run bandit security scan
+      run: |
+        bandit -r src/python/src/ -f json -o bandit-report.json || true
+        
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+        
+    name: Test Python ${{ matrix.python-version }}
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Cache Python dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ hashFiles('src/python/requirements.txt', 'requirements-dev.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.python-version }}-pip-
+          
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r src/python/requirements.txt
+        pip install -r requirements-dev.txt
+        
+    - name: Run unit tests
+      run: |
+        cd src/python
+        pytest tests/unit/ -v --cov=src --cov-report=xml --cov-report=html
+        
+    - name: Run integration tests (with mocks)
+      run: |
+        cd src/python  
+        pytest tests/integration/ -v -m "not requires_db"
+        
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      if: matrix.python-version == '3.8'
+      with:
+        file: src/python/coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.python-version }}
+        path: |
+          src/python/htmlcov/
+          src/python/coverage.xml
+
+  build-test:
+    runs-on: ubuntu-latest
+    name: Build and Integration Test
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: src/k6/package-lock.json
+        
+    - name: Install Python dependencies
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install --upgrade pip
+        pip install -r src/python/requirements.txt
+        
+    - name: Install Node.js dependencies
+      run: |
+        cd src/k6
+        npm ci
+        
+    - name: Validate environment setup
+      run: |
+        source venv/bin/activate
+        ./scripts/validate-env.sh
+        
+    - name: Run integration tests
+      run: |
+        source venv/bin/activate
+        ./scripts/test-all.sh
+
+  dependency-audit:
+    runs-on: ubuntu-latest
+    name: Dependency Audit
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install pip-audit
+      run: |
+        python -m pip install --upgrade pip
+        pip install pip-audit
+        
+    - name: Audit Python dependencies
+      run: |
+        pip-audit --requirement src/python/requirements.txt --format=json --output=pip-audit-report.json || true
+        
+    - name: Set up Node.js for npm audit
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        
+    - name: Audit Node.js dependencies
+      run: |
+        cd src/k6
+        npm audit --audit-level=moderate --json > npm-audit-report.json || true
+        
+    - name: Upload audit reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: dependency-audit-reports
+        path: |
+          pip-audit-report.json
+          src/k6/npm-audit-report.json
