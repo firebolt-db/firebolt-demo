@@ -38,7 +38,7 @@ streamlit run streamlit_app.py
 
 The app will now be available on `localhost:8501`.
 
-To login, use the default `demo`/`demo` username and password.
+Authentication should be configured with proper credentials.
 
 # Screenshot:
 

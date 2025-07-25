@@ -38,7 +38,7 @@ with st.sidebar:
 
     date_from_selected = st.date_input("Date from and to", value=(datetime.date(year=2025, month=2, day=1), datetime.date(year=2025, month=2, day=15)), key='date_from_to', help="Choose the start and end date")
     
-    media_sources = st.multiselect('Media Source', ['3bc36bb9f1bded2703684dae170581dc', 'e391b3d1930968f4cce0d5dee539d256', 'b935fcce8f277b6c60cd7598349c64e8'], ['3bc36bb9f1bded2703684dae170581dc'], key='media_sources', help="Choose one or more media sources")
+    media_sources = st.multiselect('Media Source', ['source_a', 'source_b', 'source_c'], ['source_a'], key='media_sources', help="Choose one or more media sources")
     
 
 # get data from Firebolt
