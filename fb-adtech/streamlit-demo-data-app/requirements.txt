@@ -1,0 +1,6 @@
+streamlit
+pandas
+streamlit_authenticator
+firebolt-sdk
+numerize
+fastavro
