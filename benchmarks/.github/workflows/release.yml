@@ -1,0 +1,264 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+  push:
+    tags:
+      - 'v*'
+
+env:
+  PYTHON_VERSION: '3.8'
+  NODE_VERSION: '18'
+
+jobs:
+  validate-release:
+    runs-on: ubuntu-latest
+    name: Validate Release
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+        
+    - name: Run full test suite
+      run: |
+        source venv/bin/activate
+        ./scripts/test-all.sh
+        
+    - name: Run security scans
+      run: |
+        source venv/bin/activate
+        ./scripts/security-scan.sh
+        
+    - name: Validate documentation
+      run: |
+        # Check that README exists and has required sections
+        grep -q "Quick Start" README.md
+        grep -q "Installation" README.md
+        grep -q "Usage" README.md
+        
+  build-artifacts:
+    needs: validate-release
+    runs-on: ubuntu-latest
+    name: Build Release Artifacts
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build wheel
+        
+    - name: Build Python package
+      run: |
+        python -m build
+        
+    - name: Create release archive
+      run: |
+        # Create a clean release archive
+        mkdir release-package
+        
+        # Copy source code
+        cp -r src/ release-package/
+        cp -r benchmarks/ release-package/
+        cp -r scripts/ release-package/
+        
+        # Copy documentation and configuration
+        cp README.md CONTRIBUTING.md LICENSE release-package/
+        cp .env.example release-package/
+        cp pyproject.toml requirements-dev.txt release-package/
+        
+        # Create archive
+        tar -czf database-benchmark-suite-${{ github.ref_name }}.tar.gz release-package/
+        
+    - name: Upload release artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-artifacts
+        path: |
+          dist/
+          database-benchmark-suite-*.tar.gz
+          
+  security-scan-release:
+    needs: validate-release
+    runs-on: ubuntu-latest
+    name: Security Scan Release
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety bandit[toml] pip-audit
+        
+    - name: Comprehensive security scan
+      run: |
+        echo "## Security Scan Results" > security-report.md
+        echo "" >> security-report.md
+        
+        echo "### Dependency Vulnerabilities (Safety)" >> security-report.md
+        safety check --json > safety-results.json || true
+        if [ -s safety-results.json ]; then
+          echo "❌ Vulnerabilities found - see safety-results.json" >> security-report.md
+        else
+          echo "✅ No known vulnerabilities found" >> security-report.md
+        fi
+        echo "" >> security-report.md
+        
+        echo "### Code Security Issues (Bandit)" >> security-report.md
+        bandit -r src/ -f json -o bandit-results.json || true
+        if [ -s bandit-results.json ]; then
+          issues=$(jq '.results | length' bandit-results.json 2>/dev/null || echo "0")
+          if [ "$issues" -gt 0 ]; then
+            echo "⚠️ $issues security issues found - see bandit-results.json" >> security-report.md
+          else
+            echo "✅ No security issues found" >> security-report.md
+          fi
+        fi
+        echo "" >> security-report.md
+        
+        echo "### Dependency Audit (pip-audit)" >> security-report.md
+        pip-audit --requirement src/python/requirements.txt --format=json --output=audit-results.json || true
+        if [ -s audit-results.json ]; then
+          echo "⚠️ Audit findings - see audit-results.json" >> security-report.md
+        else
+          echo "✅ No audit issues found" >> security-report.md
+        fi
+        
+    - name: Upload security report
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-scan-results
+        path: |
+          security-report.md
+          safety-results.json
+          bandit-results.json
+          audit-results.json
+
+  create-docker-image:
+    needs: validate-release
+    runs-on: ubuntu-latest
+    name: Build Docker Image
+    if: contains(github.ref, 'refs/tags/v')
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+      
+    - name: Log in to Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: ghcr.io/${{ github.repository }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  update-release-notes:
+    needs: [build-artifacts, security-scan-release]
+    runs-on: ubuntu-latest
+    name: Update Release Notes
+    if: github.event_name == 'release'
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: artifacts/
+        
+    - name: Create comprehensive release notes
+      run: |
+        echo "# Database Benchmark Suite ${{ github.ref_name }}" > release-notes.md
+        echo "" >> release-notes.md
+        echo "## 📊 What's Included" >> release-notes.md
+        echo "- Python client with Streamlit UI for interactive benchmarking" >> release-notes.md
+        echo "- K6 client for high-concurrency testing" >> release-notes.md
+        echo "- Support for Snowflake, Redshift, Firebolt, and BigQuery" >> release-notes.md
+        echo "- Comprehensive test suites and CI/CD pipelines" >> release-notes.md
+        echo "- Security scanning and vulnerability management" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "## 🚀 Quick Start" >> release-notes.md
+        echo '```bash' >> release-notes.md
+        echo "# Download and extract release" >> release-notes.md
+        echo "wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/database-benchmark-suite-${{ github.ref_name }}.tar.gz" >> release-notes.md
+        echo "tar -xzf database-benchmark-suite-${{ github.ref_name }}.tar.gz" >> release-notes.md
+        echo "cd release-package" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "# Setup environment" >> release-notes.md
+        echo "./scripts/setup.sh" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "# Run benchmarks" >> release-notes.md
+        echo "./scripts/run-python.sh" >> release-notes.md
+        echo '```' >> release-notes.md
+        echo "" >> release-notes.md
+        echo "## 🔐 Security" >> release-notes.md
+        if [ -f "artifacts/security-scan-results/security-report.md" ]; then
+          cat artifacts/security-scan-results/security-report.md >> release-notes.md
+        fi
+        echo "" >> release-notes.md
+        echo "## 📋 Files" >> release-notes.md
+        echo "- **Source Code**: database-benchmark-suite-${{ github.ref_name }}.tar.gz" >> release-notes.md
+        echo "- **Python Package**: Available in artifacts/" >> release-notes.md
+        if [ -d "artifacts/release-artifacts" ]; then
+          echo "- **Docker Image**: \`ghcr.io/${{ github.repository }}:${{ github.ref_name }}\`" >> release-notes.md
+        fi
+        
+    - name: Update release with notes
+      uses: softprops/action-gh-release@v1
+      if: github.event_name == 'release'
+      with:
+        body_path: release-notes.md
+        files: |
+          artifacts/release-artifacts/database-benchmark-suite-*.tar.gz
+          artifacts/release-artifacts/dist/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,10 @@
+{
+    "query 1": [
+        "SELECT * FROM test_table;",
+        "SELECT 42;"
+    ],
+    "query 2": [
+        "SELECT 99;",
+        "SELECT * FROM test_table;"
+    ]
+}
