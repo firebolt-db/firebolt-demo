@@ -1,0 +1,16 @@
+# Core UI
+streamlit>=1.35         # 1.35+ is 3.13-ready
+plotly==5.17.0
+
+# Data handling
+pandas==2.2.2
+numerize==0.12          # leave pinned; no 3.13 issues reported
+
+# Firebolt
+firebolt-sdk>=1.0.0
+
+# CDC / Avro
+fastavro>=1.10.0,<2.0   # 1.11.1 is current at July 2025
+
+# If you later add auth, uncomment and test on 3.13 first:
+# streamlit_authenticator>=0.4.0

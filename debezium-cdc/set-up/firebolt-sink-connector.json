@@ -1,0 +1,17 @@
+{
+  "name": "firebolt-sink-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.jdbc.JdbcSinkConnector",
+    "topics": "cdc.public.games,cdc.public.odds_history",
+    "connection.url": "jdbc:firebolt:demo_debezium_cdc?account=${env:FIREBOLT_ACCOUNT}&engine=debezium_ingestion&merge_prepared_statement_batches=true",
+    "connection.username": "${env:FIREBOLT_CLIENT_ID}",
+    "connection.password": "${env:FIREBOLT_CLIENT_SECRET}",
+    "hibernate.dialect": "org.hibernate.dialect.PostgreSQLDialect",
+    "primary.key.mode": "none",
+    "primary.key.fields": "",
+    "insert.mode": "insert",
+    "schema.evolution": "basic",
+    "delete.enabled": "false",
+    "quote.identifiers": true
+  }
+}
