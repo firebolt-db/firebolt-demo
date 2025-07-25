@@ -1,0 +1,277 @@
+[
+  {
+    "cmd": "python -m venv dreambolt-env",
+    "origin_file": "README.md",
+    "section": "Environment Setup"
+  },
+  {
+    "cmd": "source dreambolt-env/bin/activate",
+    "origin_file": "README.md",
+    "section": "Environment Setup"
+  },
+  {
+    "cmd": "pip install -r requirements.txt",
+    "origin_file": "README.md",
+    "section": "Environment Setup"
+  },
+  {
+    "cmd": "export OPENAI_API_KEY=\"your-openai-key\"",
+    "origin_file": "README.md",
+    "section": "Environment Setup"
+  },
+  {
+    "cmd": "export FIREBOLT_USERNAME=\"your-username\"",
+    "origin_file": "README.md",
+    "section": "Environment Setup"
+  },
+  {
+    "cmd": "export FIREBOLT_PASSWORD=\"your-password\"",
+    "origin_file": "README.md",
+    "section": "Environment Setup"
+  },
+  {
+    "cmd": "export FIREBOLT_ACCOUNT_NAME=\"your-account\"",
+    "origin_file": "README.md",
+    "section": "Environment Setup"
+  },
+  {
+    "cmd": "python -m cli ingest data.csv --no-synth",
+    "origin_file": "README.md",
+    "section": "Basic Usage"
+  },
+  {
+    "cmd": "python -m cli ingest data.csv --synthesize 100 --model openai:gpt-4",
+    "origin_file": "README.md",
+    "section": "Basic Usage"
+  },
+  {
+    "cmd": "python -m cli ingest s3://bucket/data.parquet --embed text-embedding-ada-002",
+    "origin_file": "README.md",
+    "section": "Basic Usage"
+  },
+  {
+    "cmd": "python -m cli status",
+    "origin_file": "README.md",
+    "section": "Basic Usage"
+  },
+  {
+    "cmd": "pytest -v",
+    "origin_file": "README.md",
+    "section": "Testing"
+  },
+  {
+    "cmd": "pytest tests/test_cli_examples.py -v",
+    "origin_file": "README.md",
+    "section": "Testing"
+  },
+  {
+    "cmd": "pytest tests/test_ingest.py -v",
+    "origin_file": "README.md",
+    "section": "Testing"
+  },
+  {
+    "cmd": "pytest -k \"test_basic\" -v",
+    "origin_file": "README.md",
+    "section": "Testing"
+  },
+  {
+    "cmd": "pytest --cov=. --cov-report=html",
+    "origin_file": "README.md",
+    "section": "Testing"
+  },
+  {
+    "cmd": "pip install datadreamer",
+    "origin_file": "README.md",
+    "section": "Troubleshooting"
+  },
+  {
+    "cmd": "echo $FIREBOLT_USERNAME",
+    "origin_file": "README.md",
+    "section": "Troubleshooting"
+  },
+  {
+    "cmd": "python -m cli ingest s3://my-bucket/data.csv",
+    "origin_file": "README.md",
+    "section": "S3 Usage"
+  },
+  {
+    "cmd": "python -m cli ingest s3://my-bucket/data.parquet --embed text-embedding-ada-002",
+    "origin_file": "README.md",
+    "section": "S3 Usage"
+  },
+  {
+    "cmd": "python -m cli ingest s3://my-bucket/data.parquet --table my_table --database analytics",
+    "origin_file": "README.md",
+    "section": "S3 Usage"
+  },
+  {
+    "cmd": "export AWS_ACCESS_KEY_ID=your_access_key",
+    "origin_file": "README.md",
+    "section": "AWS Configuration"
+  },
+  {
+    "cmd": "export AWS_SECRET_ACCESS_KEY=your_secret_key",
+    "origin_file": "README.md",
+    "section": "AWS Configuration"
+  },
+  {
+    "cmd": "export AWS_DEFAULT_REGION=us-east-1",
+    "origin_file": "README.md",
+    "section": "AWS Configuration"
+  },
+  {
+    "cmd": "aws configure",
+    "origin_file": "README.md",
+    "section": "AWS Configuration"
+  },
+  {
+    "cmd": "s3://my-bucket/data.parquet",
+    "origin_file": "README.md",
+    "section": "Regional Support"
+  },
+  {
+    "cmd": "s3://my-bucket.us-west-2.amazonaws.com/data.parquet",
+    "origin_file": "README.md",
+    "section": "Regional Support"
+  },
+  {
+    "cmd": "python -c \"from synth import ModelConfig; print(ModelConfig.SUPPORTED_MODELS)\"",
+    "origin_file": "README.md",
+    "section": "Troubleshooting"
+  },
+  {
+    "cmd": "git clone https://github.com/yourusername/dreambolt.git",
+    "origin_file": "README.md",
+    "section": "Development Setup"
+  },
+  {
+    "cmd": "cd dreambolt",
+    "origin_file": "README.md",
+    "section": "Development Setup"
+  },
+  {
+    "cmd": "python -m venv venv",
+    "origin_file": "README.md",
+    "section": "Development Setup"
+  },
+  {
+    "cmd": "source venv/bin/activate",
+    "origin_file": "README.md",
+    "section": "Development Setup"
+  },
+  {
+    "cmd": "python cli.py --help",
+    "origin_file": "README.md",
+    "section": "Development Setup"
+  },
+  {
+    "cmd": "python ingest.py",
+    "origin_file": "README.md",
+    "section": "Development Setup"
+  },
+  {
+    "cmd": "python synth.py",
+    "origin_file": "README.md",
+    "section": "Development Setup"
+  },
+  {
+    "cmd": "python firebolt_io.py",
+    "origin_file": "README.md",
+    "section": "Development Setup"
+  },
+  {
+    "cmd": "cd /path/to/Dreambolt",
+    "origin_file": "testing.md",
+    "section": "Environment Setup"
+  },
+  {
+    "cmd": "python3 -m venv dreambolt-test-env",
+    "origin_file": "testing.md",
+    "section": "Environment Setup"
+  },
+  {
+    "cmd": "source dreambolt-test-env/bin/activate",
+    "origin_file": "testing.md",
+    "section": "Environment Setup"
+  },
+  {
+    "cmd": "pytest --collect-only",
+    "origin_file": "testing.md",
+    "section": "Test Suite Execution"
+  },
+  {
+    "cmd": "pytest --cov=. --cov-report=term-missing",
+    "origin_file": "testing.md",
+    "section": "Test Suite Execution"
+  },
+  {
+    "cmd": "pytest tests/test_ingest.py::TestBasicIngest -v",
+    "origin_file": "testing.md",
+    "section": "Test Suite Execution"
+  },
+  {
+    "cmd": "pytest -m \"not slow\" -v",
+    "origin_file": "testing.md",
+    "section": "Test Suite Execution"
+  },
+  {
+    "cmd": "python cli_working.py --help",
+    "origin_file": "testing.md",
+    "section": "CLI Functionality Testing"
+  },
+  {
+    "cmd": "python cli_working.py ingest --help",
+    "origin_file": "testing.md",
+    "section": "CLI Functionality Testing"
+  },
+  {
+    "cmd": "python cli_working.py status",
+    "origin_file": "testing.md",
+    "section": "CLI Functionality Testing"
+  },
+  {
+    "cmd": "python cli_working.py ingest WorldCupPlayers.csv --no-synth",
+    "origin_file": "testing.md",
+    "section": "Data Ingestion Testing"
+  },
+  {
+    "cmd": "python cli_working.py ingest WorldCupPlayers.csv --synthesize 3 --model openai:gpt-3.5-turbo",
+    "origin_file": "testing.md",
+    "section": "Data Ingestion Testing"
+  },
+  {
+    "cmd": "python cli_working.py ingest WorldCupPlayers.csv --embed text-embedding-ada-002 --no-synth",
+    "origin_file": "testing.md",
+    "section": "Data Ingestion Testing"
+  },
+  {
+    "cmd": "python cli_working.py ingest WorldCupPlayers.csv --synthesize 2 --dry-run",
+    "origin_file": "testing.md",
+    "section": "Data Ingestion Testing"
+  },
+  {
+    "cmd": "python cli_working.py ingest nonexistent.csv",
+    "origin_file": "testing.md",
+    "section": "Error Handling Testing"
+  },
+  {
+    "cmd": "echo \"test\" > test.txt",
+    "origin_file": "testing.md",
+    "section": "Error Handling Testing"
+  },
+  {
+    "cmd": "python cli_working.py ingest test.txt",
+    "origin_file": "testing.md",
+    "section": "Error Handling Testing"
+  },
+  {
+    "cmd": "rm test.txt",
+    "origin_file": "testing.md",
+    "section": "Error Handling Testing"
+  },
+  {
+    "cmd": "python cli_working.py ingest s3://test-bucket/data.csv",
+    "origin_file": "testing.md",
+    "section": "Error Handling Testing"
+  }
+] 

@@ -1,0 +1,6 @@
+id,name,score,active,category
+1,Alice,95.5,True,A
+2,Bob,87.2,False,B
+3,Charlie,92.8,True,A
+4,Diana,88.9,True,C
+5,Eve,91.1,False,B
