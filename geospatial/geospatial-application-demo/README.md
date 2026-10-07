@@ -38,7 +38,7 @@ firebolt-demo/
 ├── app.py                 # Main Flask application
 ├── mapbox_token.txt       # Contains your Mapbox public token (starting with "pk.")
 ├── requirements.txt       # List of Python dependencies
-├── .env                   # (Optional) Environment variables for Firebolt credentials
+├── .env.example           # Template for local Firebolt credentials
 ├── static/
 │   ├── css/
 │   │   └── style.css      # Custom CSS styles
@@ -98,7 +98,13 @@ firebolt-demo/
    ```
 
 4. **Set Up Environment Variables:**  
-   Either create a `.env` file in the project root with your Firebolt credentials:
+   From this demo's directory, copy the template to an ignored `.env` file:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Fill in your Firebolt credentials in `.env`:
 
    ```ini
    FIREBOLT_CLIENT_ID=your_client_id
